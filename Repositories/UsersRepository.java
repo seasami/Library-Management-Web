@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class UserRepository {
+public class UsersRepository {
     public Optional<Users> findById(String userId) throws SQLException {
         String sql = "SELECT user_id, role_id, created_at, username, email, "
                 + "password_hash, full_name, phone, status FROM users WHERE user_id = ?";

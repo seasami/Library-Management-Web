@@ -2,7 +2,7 @@ package Model;
 
 import java.time.LocalDate;
 
-public class Manager extends Users {
+public class Managers extends Users {
     private String employeeCode;
     private String officeLocation;
     private LocalDate appointedAt;

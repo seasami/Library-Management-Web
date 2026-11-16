@@ -1,6 +1,6 @@
 package Repositories;
 
-import Model.Reader;
+import Model.Readers;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -15,9 +15,9 @@ public class ReaderRepository {
             "INSERT INTO users (user_id, role_id, username, email, password_hash, "
                     + "full_name, phone, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-    public Optional<Reader> findById(String userId) throws SQLException {
+    public Optional<Readers> findById(String userId) throws SQLException {
         String sql = "SELECT u.user_id, u.role_id, u.created_at, u.username, "
-                + "u.email, u.password_hash, u.full_name, u.phone, u.status, r.subscription_id, "
+                + "u.email, u.password_hash, u.full_name, u.phone, u.status, "
                 + "r.date_of_birth, r.updated_at, r.citizen_id "
                 + "FROM users u JOIN readers r ON r.user_id = u.user_id WHERE u.user_id = ?";
 
@@ -29,7 +29,7 @@ public class ReaderRepository {
                     return Optional.empty();
                 }
 
-                Reader reader = new Reader();
+                Readers reader = new Readers();
                 copyUserFields(resultSet, reader);
                 Date dateOfBirth = resultSet.getDate("date_of_birth");
                 if (dateOfBirth != null) {
@@ -49,19 +49,18 @@ public class ReaderRepository {
         }
     }
 
-    public void insert(Reader reader) throws SQLException {
-        String insertReaderSql = "INSERT INTO readers "
-                + "(user_id, subscription_id, date_of_birth, citizen_id) VALUES (?, ?, ?, ?)";
+    public void insert(Readers reader) throws SQLException {
+        String insertReaderSql = "INSERT INTO readers (user_id, date_of_birth, citizen_id) "
+                + "VALUES (?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
-                UserRepository.insertUser(connection, reader, INSERT_USER_SQL);
+                UsersRepository.insertUser(connection, reader, INSERT_USER_SQL);
                 try (PreparedStatement statement = connection.prepareStatement(insertReaderSql)) {
                     statement.setString(1, reader.getUserId());
-                    statement.setString(2, reader.getSubscriptionId());
-                    setDate(statement, 3, reader.getDob());
-                    statement.setString(4, reader.getCitizenId());
+                    setDate(statement, 2, reader.getDob());
+                    statement.setString(3, reader.getCitizenId());
                     statement.executeUpdate();
                 }
                 connection.commit();
@@ -72,9 +71,9 @@ public class ReaderRepository {
         }
     }
 
-    public boolean update(Reader reader) throws SQLException {
-        String updateReaderSql = "UPDATE readers SET subscription_id = ?, date_of_birth = ?, "
-                + "citizen_id = ? WHERE user_id = ?";
+    public boolean update(Readers reader) throws SQLException {
+        String updateReaderSql = "UPDATE readers SET date_of_birth = ?, citizen_id = ? "
+                + "WHERE user_id = ?";
         try (Connection connection = DatabaseConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -87,15 +86,14 @@ public class ReaderRepository {
                         + "password_hash = ?, full_name = ?, phone = ?, "
                         + "status = ? WHERE user_id = ?";
                 try (PreparedStatement statement = connection.prepareStatement(updateUserSql)) {
-                    UserRepository.bindUserUpdate(statement, reader);
+                    UsersRepository.bindUserUpdate(statement, reader);
                     statement.executeUpdate();
                 }
 
                 try (PreparedStatement statement = connection.prepareStatement(updateReaderSql)) {
-                    statement.setString(1, reader.getSubscriptionId());
-                    setDate(statement, 2, reader.getDob());
-                    statement.setString(3, reader.getCitizenId());
-                    statement.setString(4, reader.getUserId());
+                    setDate(statement, 1, reader.getDob());
+                    statement.setString(2, reader.getCitizenId());
+                    statement.setString(3, reader.getUserId());
                     statement.executeUpdate();
                 }
                 connection.commit();
@@ -118,10 +116,9 @@ public class ReaderRepository {
         }
     }
 
-    private static void copyUserFields(ResultSet resultSet, Reader reader) throws SQLException {
+    private static void copyUserFields(ResultSet resultSet, Readers reader) throws SQLException {
         reader.setUserId(resultSet.getString("user_id"));
         reader.setRoleId(resultSet.getString("role_id"));
-        reader.setSubscriptionId(resultSet.getString("subscription_id"));
         reader.setUsername(resultSet.getString("username"));
         reader.setEmail(resultSet.getString("email"));
         reader.setPasswordHash(resultSet.getString("password_hash"));

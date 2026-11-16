@@ -9,10 +9,9 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Optional;
 
-public class BookCopyRepository {
+public class BookCopiesRepository {
     public Optional<BookCopies> findById(String copyId) throws SQLException {
-        String sql = "SELECT copy_id, book_id, copy_code, copy_status, created_at "
-                + "FROM book_copies WHERE copy_id = ?";
+        String sql = "SELECT copy_id, book_id, copy_code, copy_status, created_at FROM book_copies WHERE copy_id = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -26,8 +25,7 @@ public class BookCopyRepository {
     }
 
     public void insert(BookCopies bookCopy) throws SQLException {
-        String sql = "INSERT INTO book_copies (copy_id, book_id, copy_code, copy_status) "
-                + "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO book_copies (copy_id, book_id, copy_code, copy_status) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

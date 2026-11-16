@@ -10,8 +10,7 @@ public final class DatabaseConnection {
     private static final String DEFAULT_USERNAME = "root";
     private static final String DEFAULT_PASSWORD = "";
 
-    private DatabaseConnection() {
-    }
+    private DatabaseConnection() {}
 
     public static Connection getConnection() throws SQLException {
         String url = getEnvironmentValue("DB_URL", DEFAULT_URL);

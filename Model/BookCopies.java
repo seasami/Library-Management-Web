@@ -48,4 +48,15 @@ public class BookCopies {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public String toString() {
+        return "BookCopies{"
+                + "copyId='" + copyId + '\''
+                + ", bookId='" + bookId + '\''
+                + ", copyCode='" + copyCode + '\''
+                + ", copyStatus='" + copyStatus + '\''
+                + ", createdAt=" + createdAt
+                + '}';
+    }
 }

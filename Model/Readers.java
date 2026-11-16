@@ -3,11 +3,10 @@ package Model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class Reader extends Users {
+public class Readers extends Users {
     private LocalDate dob;
     private LocalDateTime updatedAt;
     private String citizenId;
-    private String subscriptionId;
 
     public LocalDate getDob() {
         return dob;
@@ -33,11 +32,4 @@ public class Reader extends Users {
         this.citizenId = citizenId;
     }
 
-    public String getSubscriptionId() {
-        return subscriptionId;
-    }
-
-    public void setSubscriptionId(String subscriptionId) {
-        this.subscriptionId = subscriptionId;
-    }
 }

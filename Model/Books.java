@@ -6,6 +6,7 @@ public class Books {
     private String bookId;
     private String title;
     private String categoryId;
+    private String secondaryCategoryId;
     private String publisherId;
     private Integer publicationYear;
     private Integer minReaderAge;
@@ -44,6 +45,14 @@ public class Books {
 
     public void setCategoryId(String categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public String getSecondaryCategoryId() {
+        return secondaryCategoryId;
+    }
+
+    public void setSecondaryCategoryId(String secondaryCategoryId) {
+        this.secondaryCategoryId = secondaryCategoryId;
     }
 
     public String getPublisherId() {

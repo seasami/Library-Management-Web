@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public class BorrowingRules {
     private String ruleId;
     private String ruleName;
+    private String readerType;
     private Integer maxBooks;
     private Integer loanDays;
     private Integer minAgeForRestrictedBooks;
@@ -26,6 +27,14 @@ public class BorrowingRules {
 
     public void setRuleName(String ruleName) {
         this.ruleName = ruleName;
+    }
+
+    public String getReaderType() {
+        return readerType;
+    }
+
+    public void setReaderType(String readerType) {
+        this.readerType = readerType;
     }
 
     public Integer getMaxBooks() {

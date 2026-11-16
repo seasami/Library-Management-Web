@@ -1,6 +1,6 @@
 package Model;
 
-public class Librarian extends Users {
+public class Librarians extends Users {
     private String warehouseCode;
     private String workShift;
 
