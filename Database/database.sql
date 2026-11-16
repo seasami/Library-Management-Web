@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`roles` (
   `role_id` VARCHAR(30) NOT NULL,
   `role_name` VARCHAR(30) NOT NULL,
   `description` VARCHAR(255) NULL DEFAULT NULL,
-  PRIMARY KEY (`role_id`),
+  PRIMARY KEY (`role_id`),                                 
   UNIQUE INDEX `role_name` (`role_name`))
 ENGINE = InnoDB;
 
@@ -18,11 +18,12 @@ CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`users` (
   `email` VARCHAR(255) NULL DEFAULT NULL,
   `password_hash` VARCHAR(255) NOT NULL,
   `full_name` VARCHAR(150) NOT NULL,
-  `phone` VARCHAR(20) NULL DEFAULT NULL,
+  `phone` VARCHAR(10) NOT NULL,
   `status` ENUM('active', 'restricted', 'locked') NOT NULL DEFAULT 'active',
   PRIMARY KEY (`user_id`),
   UNIQUE INDEX `username` (`username`),
   UNIQUE INDEX `email` (`email`),
+  UNIQUE INDEX `phone` (`phone`),
   INDEX `fk_users_role` (`role_id`),
   CONSTRAINT `fk_users_role`
     FOREIGN KEY (`role_id`)
@@ -74,7 +75,6 @@ ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`readers` (
   `user_id` VARCHAR(30) NOT NULL,
-  `subscription_id` VARCHAR(30) NULL DEFAULT NULL,
   `date_of_birth` DATE NULL DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -86,6 +86,48 @@ CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`readers` (
     REFERENCES `quan_ly_thu_vien`.`users` (`user_id`)
     ON DELETE CASCADE)
 ENGINE = InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`subscription_plans` (
+  `plan_id` VARCHAR(10) NOT NULL,
+  `plan_name` VARCHAR(50) NOT NULL,
+  `duration_months` TINYINT UNSIGNED NOT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT '1',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`plan_id`),
+  UNIQUE INDEX `uq_subscription_plans_name` (`plan_name`))
+ENGINE = InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`reader_subscriptions` (
+  `subscription_id` VARCHAR(30) NOT NULL,
+  `reader_id` VARCHAR(30) NOT NULL,
+  `plan_id` VARCHAR(10) NOT NULL,
+  `started_at` DATETIME NOT NULL,
+  `expires_at` DATETIME NOT NULL,
+  `subscription_status` ENUM('active', 'cancelled') NOT NULL DEFAULT 'active',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`subscription_id`),
+  INDEX `idx_reader_subscriptions_reader_period`
+    (`reader_id`, `started_at`, `expires_at`),
+  INDEX `idx_reader_subscriptions_plan` (`plan_id`),
+  CONSTRAINT `fk_reader_subscriptions_reader`
+    FOREIGN KEY (`reader_id`)
+    REFERENCES `quan_ly_thu_vien`.`readers` (`user_id`)
+    ON DELETE RESTRICT,
+  CONSTRAINT `fk_reader_subscriptions_plan`
+    FOREIGN KEY (`plan_id`)
+    REFERENCES `quan_ly_thu_vien`.`subscription_plans` (`plan_id`)
+    ON DELETE RESTRICT)
+ENGINE = InnoDB;
+
+
+INSERT IGNORE INTO `quan_ly_thu_vien`.`subscription_plans`
+  (`plan_id`, `plan_name`, `duration_months`)
+VALUES
+  ('PLAN6M', '6-month subscription', 6),
+  ('PLAN12M', '12-month subscription', 12);
 
 
 CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`audit_logs` (
@@ -136,6 +178,7 @@ CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`books` (
   `book_id` VARCHAR(20) NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `category_id` VARCHAR(10) NULL DEFAULT NULL,
+  `secondary_category_id` VARCHAR(10) NULL DEFAULT NULL,
   `publisher_id` VARCHAR(50) NULL DEFAULT NULL,
   `publication_year` SMALLINT UNSIGNED NULL DEFAULT NULL,
   `min_reader_age` TINYINT UNSIGNED NOT NULL DEFAULT '0',
@@ -145,15 +188,23 @@ CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`books` (
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`book_id`),
   INDEX `fk_books_category` (`category_id`),
+  INDEX `fk_books_secondary_category` (`secondary_category_id`),
   INDEX `fk_books_publisher` (`publisher_id`),
   CONSTRAINT `fk_books_category`
     FOREIGN KEY (`category_id`)
     REFERENCES `quan_ly_thu_vien`.`categories` (`category_id`)
-    ON DELETE SET NULL,
+    ON DELETE RESTRICT,
+  CONSTRAINT `fk_books_secondary_category`
+    FOREIGN KEY (`secondary_category_id`)
+    REFERENCES `quan_ly_thu_vien`.`categories` (`category_id`)
+    ON DELETE RESTRICT,
   CONSTRAINT `fk_books_publisher`
     FOREIGN KEY (`publisher_id`)
     REFERENCES `quan_ly_thu_vien`.`publishers` (`publisher_id`)
-    ON DELETE SET NULL)
+    ON DELETE SET NULL,
+  CONSTRAINT `chk_books_categories_different`
+    CHECK (`secondary_category_id` IS NULL OR
+      (`category_id` IS NOT NULL AND `secondary_category_id` <> `category_id`)))
 ENGINE = InnoDB;
 
 
@@ -243,6 +294,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`borrowing_rules` (
   `rule_id` VARCHAR(5) NOT NULL,
   `rule_name` VARCHAR(100) NOT NULL,
+  `reader_type` ENUM('regular', 'subscriber') NOT NULL,
   `max_books` INT UNSIGNED NOT NULL DEFAULT '5',
   `loan_days` INT UNSIGNED NOT NULL DEFAULT '14',
   `min_age_for_restricted_books` TINYINT UNSIGNED NOT NULL DEFAULT '0',
@@ -250,6 +302,7 @@ CREATE TABLE IF NOT EXISTS `quan_ly_thu_vien`.`borrowing_rules` (
   `updated_by` VARCHAR(30) NULL DEFAULT NULL,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`rule_id`),
+  UNIQUE INDEX `uq_borrowing_rules_reader_type` (`reader_type`),
   INDEX `fk_rules_librarian` (`updated_by`),
   CONSTRAINT `fk_rules_librarian`
     FOREIGN KEY (`updated_by`)
