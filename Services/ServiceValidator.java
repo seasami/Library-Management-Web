@@ -20,9 +20,19 @@ final class ServiceValidator {
         }
     }
 
-    static void digitsOnly(String value, String field) {
-        if (value == null || !value.matches("[0-9]+")) {
-            throw new IllegalArgumentException(field + " chỉ được chứa chữ số");
+    static void email(String value, String field) {
+        String pattern = "^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+"
+                + "(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
+                + "(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+"
+                + "[A-Za-z]{2,63}$";
+        if (value == null || value.length() > 254 || !value.matches(pattern)) {
+            throw new IllegalArgumentException(field + " không đúng định dạng email");
+        }
+    }
+
+    static void digitsWithLeadingZero(String value, String field, int length) {
+        if (value == null || !value.matches("0[0-9]{" + (length - 1) + "}")) {
+            throw new IllegalArgumentException(field + " không đúng định dạng");
         }
     }
 

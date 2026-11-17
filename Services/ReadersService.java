@@ -58,7 +58,7 @@ public class ReadersService {
 
     private static void validateReader(Readers reader) {
         ServiceValidator.requireText(reader.getCitizenId(), "citizenId", 12);
-        ServiceValidator.digitsOnly(reader.getCitizenId(), "citizenId");
+        ServiceValidator.digitsWithLeadingZero(reader.getCitizenId(), "citizenId", 12);
     }
 
     public static class ServiceException extends RuntimeException {

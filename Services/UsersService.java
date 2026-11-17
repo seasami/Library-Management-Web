@@ -89,8 +89,11 @@ public class UsersService {
         ServiceValidator.requireText(user.getPasswordHash(), "passwordHash", 255);
         ServiceValidator.requireText(user.getFullName(), "fullName", 150);
         ServiceValidator.optionalText(user.getEmail(), "email", 255);
+        if (user.getEmail() != null) {
+            ServiceValidator.email(user.getEmail(), "email");
+        }
         ServiceValidator.requireText(user.getPhone(), "phone", 10);
-        ServiceValidator.digitsOnly(user.getPhone(), "phone");
+        ServiceValidator.digitsWithLeadingZero(user.getPhone(), "phone", 10);
     }
 
     private static void validateUserStatus(String status) {

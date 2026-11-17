@@ -22,13 +22,13 @@ public class BookCopiesService {
         this.repository = Objects.requireNonNull(repository, "repository không được null");
     }
 
-
     public Optional<BookCopies> findById(String copyId) {
         ServiceValidator.requireText(copyId, "copyId", 5);
         try {
             return repository.findById(copyId);
-        } catch (SQLException exception) {
-            throw new LookupException(exception);
+        } catch (Exception ex) {
+            System.out.println("Lỗi khi tìm bản sao sách " + copyId + ": " + ex.getMessage());
+            return Optional.empty();
         }
     }
 
@@ -44,30 +44,44 @@ public class BookCopiesService {
         validateCopyStatus(bookCopy.getCopyStatus());
         try {
             repository.insert(bookCopy);
+            System.out.println("Tạo bản sao sách thành công với Copy ID: " + bookCopy.getCopyId());
         } catch (SQLException exception) {
-            throw new CreationException(exception);
+            System.out.println("Lỗi khi tạo bản sao sách " + bookCopy.getCopyId() + ": " + exception.getMessage());
         }
     }
 
-    public boolean update(BookCopies bookCopy) {
+    public void update(BookCopies bookCopy) {
         Objects.requireNonNull(bookCopy, "bookCopy không được null");
-        ServiceValidator.requireText(bookCopy.getCopyId(), "copyId", 5);
+        try {
+            if (!repository.findById(bookCopy.getCopyId()).isPresent()) {
+                System.out.println("Không tìm thấy bản sao sách với Copy ID: " + bookCopy.getCopyId());
+                return;
+            }
+        } catch (Exception exception) {
+            System.out.println("Lỗi khi tìm bản sao sách " + bookCopy.getCopyId() + ": " + exception.getMessage());
+            return;
+        }
         ServiceValidator.requireText(bookCopy.getBookId(), "bookId", 20);
         ServiceValidator.requireText(bookCopy.getCopyCode(), "copyCode", 50);
         validateCopyStatus(bookCopy.getCopyStatus());
         try {
-            return repository.update(bookCopy);
+            repository.update(bookCopy);
+            System.out.println("Cập nhật bản sao sách thành công với Copy ID: " + bookCopy.getCopyId());
         } catch (SQLException exception) {
-            throw new UpdateException(exception);
+            System.out.println("Lỗi khi cập nhật bản sao sách " + bookCopy.getCopyId() + ": " + exception.getMessage());
         }
     }
 
-    public boolean deleteById(String copyId) {
+    public void deleteById(String copyId) {
         ServiceValidator.requireText(copyId, "copyId", 5);
         try {
-            return repository.deleteById(copyId);
+            if (!repository.findById(copyId).isPresent()) {
+                throw new IllegalArgumentException("Bản sao sách không tồn tại.");
+            }
+            repository.deleteById(copyId);
+            System.out.println("Xóa bản sao sách thành công với Copy ID: " + copyId);
         } catch (SQLException exception) {
-            throw new DeletionException(exception);
+            System.out.println("Lỗi khi xóa bản sao sách " + copyId + ": " + exception.getMessage());
         }
     }
 
@@ -75,34 +89,4 @@ public class BookCopiesService {
         ServiceValidator.oneOf(
                 status, "copyStatus", AVAILABLE, MAINTENANCE, RETIRED);
     }
-
-    public static class ServiceException extends RuntimeException {
-        private ServiceException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
-    public static final class LookupException extends ServiceException {
-        public LookupException(Throwable cause) {
-            super("Không thể tìm bản sao sách", cause);
-        }
-    }
-
-    public static final class CreationException extends ServiceException {
-        public CreationException(Throwable cause) {
-            super("Không thể tạo bản sao sách", cause);
-        }
-    }
-
-    public static final class UpdateException extends ServiceException {
-        public UpdateException(Throwable cause) {
-            super("Không thể cập nhật bản sao sách", cause);
-        }
-    }
-
-    public static final class DeletionException extends ServiceException {
-        public DeletionException(Throwable cause) {
-            super("Không thể xóa bản sao sách", cause);
-        }
-    }
-}
+}   
