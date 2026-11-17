@@ -23,12 +23,16 @@ public class BookCopiesService {
     }
 
 
-    public Optional<BookCopies> findById(String copyId) throws SQLException {
+    public Optional<BookCopies> findById(String copyId) {
         ServiceValidator.requireText(copyId, "copyId", 5);
-        return repository.findById(copyId);
+        try {
+            return repository.findById(copyId);
+        } catch (SQLException exception) {
+            throw new LookupException(exception);
+        }
     }
 
-    public void create(BookCopies bookCopy) throws SQLException {
+    public void create(BookCopies bookCopy) {
         Objects.requireNonNull(bookCopy, "bookCopy không được null");
         ServiceValidator.requireText(bookCopy.getCopyId(), "copyId", 5);
         ServiceValidator.requireText(bookCopy.getBookId(), "bookId", 20);
@@ -38,25 +42,67 @@ public class BookCopiesService {
             bookCopy.setCopyStatus(AVAILABLE);
         }
         validateCopyStatus(bookCopy.getCopyStatus());
-        repository.insert(bookCopy);
+        try {
+            repository.insert(bookCopy);
+        } catch (SQLException exception) {
+            throw new CreationException(exception);
+        }
     }
 
-    public boolean update(BookCopies bookCopy) throws SQLException {
+    public boolean update(BookCopies bookCopy) {
         Objects.requireNonNull(bookCopy, "bookCopy không được null");
         ServiceValidator.requireText(bookCopy.getCopyId(), "copyId", 5);
         ServiceValidator.requireText(bookCopy.getBookId(), "bookId", 20);
         ServiceValidator.requireText(bookCopy.getCopyCode(), "copyCode", 50);
         validateCopyStatus(bookCopy.getCopyStatus());
-        return repository.update(bookCopy);
+        try {
+            return repository.update(bookCopy);
+        } catch (SQLException exception) {
+            throw new UpdateException(exception);
+        }
     }
 
-    public boolean deleteById(String copyId) throws SQLException {
+    public boolean deleteById(String copyId) {
         ServiceValidator.requireText(copyId, "copyId", 5);
-        return repository.deleteById(copyId);
+        try {
+            return repository.deleteById(copyId);
+        } catch (SQLException exception) {
+            throw new DeletionException(exception);
+        }
     }
 
     private static void validateCopyStatus(String status) {
         ServiceValidator.oneOf(
                 status, "copyStatus", AVAILABLE, MAINTENANCE, RETIRED);
+    }
+
+    public static class ServiceException extends RuntimeException {
+        private ServiceException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    public static final class LookupException extends ServiceException {
+        public LookupException(Throwable cause) {
+            super("Không thể tìm bản sao sách", cause);
+        }
+    }
+
+    public static final class CreationException extends ServiceException {
+        public CreationException(Throwable cause) {
+            super("Không thể tạo bản sao sách", cause);
+        }
+    }
+
+    public static final class UpdateException extends ServiceException {
+        public UpdateException(Throwable cause) {
+            super("Không thể cập nhật bản sao sách", cause);
+        }
+    }
+
+    public static final class DeletionException extends ServiceException {
+        public DeletionException(Throwable cause) {
+            super("Không thể xóa bản sao sách", cause);
+        }
     }
 }

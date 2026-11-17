@@ -18,30 +18,76 @@ public class ReadersService {
         this.repository = Objects.requireNonNull(repository, "repository không được null");
     }
 
-    public Optional<Readers> findById(String userId) throws SQLException {
+    public Optional<Readers> findById(String userId) {
         ServiceValidator.requireText(userId, "userId", 30);
-        return repository.findById(userId);
+        try {
+            return repository.findById(userId);
+        } catch (SQLException exception) {
+            throw new LookupException(exception);
+        }
     }
 
-    public void create(Readers reader) throws SQLException {
+    public void create(Readers reader) {
         UsersService.validateForCreate(reader);
         validateReader(reader);
-        repository.insert(reader);
+        try {
+            repository.insert(reader);
+        } catch (SQLException exception) {
+            throw new CreationException(exception);
+        }
     }
 
-    public boolean update(Readers reader) throws SQLException {
+    public boolean update(Readers reader) {
         UsersService.validateForUpdate(reader);
         validateReader(reader);
-        return repository.update(reader);
+        try {
+            return repository.update(reader);
+        } catch (SQLException exception) {
+            throw new UpdateException(exception);
+        }
     }
 
-    public boolean deleteById(String userId) throws SQLException {
+    public boolean deleteById(String userId) {
         ServiceValidator.requireText(userId, "userId", 30);
-        return repository.deleteById(userId);
+        try {
+            return repository.deleteById(userId);
+        } catch (SQLException exception) {
+            throw new DeletionException(exception);
+        }
     }
 
     private static void validateReader(Readers reader) {
-        ServiceValidator.requireText(reader.getCitizenId(), "citizenId", 20);
+        ServiceValidator.requireText(reader.getCitizenId(), "citizenId", 12);
         ServiceValidator.digitsOnly(reader.getCitizenId(), "citizenId");
+    }
+
+    public static class ServiceException extends RuntimeException {
+        private ServiceException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    public static final class LookupException extends ServiceException {
+        public LookupException(Throwable cause) {
+            super("Không thể tìm độc giả", cause);
+        }
+    }
+
+    public static final class CreationException extends ServiceException {
+        public CreationException(Throwable cause) {
+            super("Không thể tạo độc giả", cause);
+        }
+    }
+
+    public static final class UpdateException extends ServiceException {
+        public UpdateException(Throwable cause) {
+            super("Không thể cập nhật độc giả", cause);
+        }
+    }
+
+    public static final class DeletionException extends ServiceException {
+        public DeletionException(Throwable cause) {
+            super("Không thể xóa độc giả", cause);
+        }
     }
 }

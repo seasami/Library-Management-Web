@@ -23,28 +23,48 @@ public class UsersService {
         this.repository = Objects.requireNonNull(repository, "repository không được null");
     }
 
-    public Optional<Users> findById(String userId) throws SQLException {
+    public Optional<Users> findById(String userId) {
         ServiceValidator.requireText(userId, "userId", 30);
-        return repository.findById(userId);
+        try {
+            return repository.findById(userId);
+        } catch (SQLException exception) {
+            throw new LookupException(exception);
+        }
     }
 
-    public List<Users> findAll() throws SQLException {
-        return repository.findAll();
+    public List<Users> findAll() {
+        try {
+            return repository.findAll();
+        } catch (SQLException exception) {
+            throw new ListRetrievalException(exception);
+        }
     }
 
-    public void create(Users user) throws SQLException {
+    public void create(Users user) {
         validateForCreate(user);
-        repository.insert(user);
+        try {
+            repository.insert(user);
+        } catch (SQLException exception) {
+            throw new CreationException(exception);
+        }
     }
 
-    public boolean update(Users user) throws SQLException {
+    public boolean update(Users user) {
         validateForUpdate(user);
-        return repository.update(user);
+        try {
+            return repository.update(user);
+        } catch (SQLException exception) {
+            throw new UpdateException(exception);
+        }
     }
 
-    public boolean deleteById(String userId) throws SQLException {
+    public boolean deleteById(String userId) {
         ServiceValidator.requireText(userId, "userId", 30);
-        return repository.deleteById(userId);
+        try {
+            return repository.deleteById(userId);
+        } catch (SQLException exception) {
+            throw new DeletionException(exception);
+        }
     }
 
     static void validateForCreate(Users user) {
@@ -75,5 +95,41 @@ public class UsersService {
 
     private static void validateUserStatus(String status) {
         ServiceValidator.oneOf(status, "status", ACTIVE, RESTRICTED, LOCKED);
+    }
+
+    public static class ServiceException extends RuntimeException {
+        private ServiceException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    public static final class LookupException extends ServiceException {
+        public LookupException(Throwable cause) {
+            super("Không thể tìm người dùng", cause);
+        }
+    }
+
+    public static final class ListRetrievalException extends ServiceException {
+        public ListRetrievalException(Throwable cause) {
+            super("Không thể lấy danh sách người dùng", cause);
+        }
+    }
+
+    public static final class CreationException extends ServiceException {
+        public CreationException(Throwable cause) {
+            super("Không thể tạo người dùng", cause);
+        }
+    }
+
+    public static final class UpdateException extends ServiceException {
+        public UpdateException(Throwable cause) {
+            super("Không thể cập nhật người dùng", cause);
+        }
+    }
+
+    public static final class DeletionException extends ServiceException {
+        public DeletionException(Throwable cause) {
+            super("Không thể xóa người dùng", cause);
+        }
     }
 }
