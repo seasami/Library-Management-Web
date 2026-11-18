@@ -24,9 +24,11 @@ public class BooksService {
     public Optional<Books> findById(String bookId) {
         ServiceValidator.requireText(bookId, "bookId", 20);
         try {
+            System.out.println("Tìm thấy sách với ID: " + bookId);
             return repository.findById(bookId);
         } catch (SQLException exception) {
-            throw new LookupException(exception);
+            System.err.println("Lỗi khi tìm sách với ID: " + bookId);
+            return Optional.empty();
         }
     }
 
@@ -39,28 +41,31 @@ public class BooksService {
         validateBookStatus(book.getStatus());
         try {
             repository.insert(book);
+            System.out.println("Sách đã được tạo thành công với ID: " + book.getBookId());
         } catch (SQLException exception) {
-            throw new CreationException(exception);
+            System.err.println("Lỗi khi tạo sách với ID: " + book.getBookId());
         }
     }
 
-    public boolean update(Books book) {
+    public void update(Books book) {
         Objects.requireNonNull(book, "book không được null");
         validateBook(book);
         validateBookStatus(book.getStatus());
         try {
-            return repository.update(book);
+            repository.update(book);
+            System.out.println("Sách đã được cập nhật thành công với ID: " + book.getBookId());
         } catch (SQLException exception) {
-            throw new UpdateException(exception);
+            System.err.println("Lỗi khi cập nhật sách với ID: " + book.getBookId());
         }
     }
 
-    public boolean deleteById(String bookId) {
+    public void deleteById(String bookId) {
         ServiceValidator.requireText(bookId, "bookId", 20);
         try {
-            return repository.deleteById(bookId);
+            repository.deleteById(bookId);
+            System.out.println("Sách đã được xóa thành công với ID: " + bookId);
         } catch (SQLException exception) {
-            throw new DeletionException(exception);
+            System.err.println("Lỗi khi xóa sách với ID: " + bookId);
         }
     }
 
@@ -83,35 +88,5 @@ public class BooksService {
 
     private static void validateBookStatus(String status) {
         ServiceValidator.oneOf(status, "status", ACTIVE, INACTIVE);
-    }
-
-    public static class ServiceException extends RuntimeException {
-        private ServiceException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
-    public static final class LookupException extends ServiceException {
-        public LookupException(Throwable cause) {
-            super("Không thể tìm sách", cause);
-        }
-    }
-
-    public static final class CreationException extends ServiceException {
-        public CreationException(Throwable cause) {
-            super("Không thể tạo sách", cause);
-        }
-    }
-
-    public static final class UpdateException extends ServiceException {
-        public UpdateException(Throwable cause) {
-            super("Không thể cập nhật sách", cause);
-        }
-    }
-
-    public static final class DeletionException extends ServiceException {
-        public DeletionException(Throwable cause) {
-            super("Không thể xóa sách", cause);
-        }
     }
 }

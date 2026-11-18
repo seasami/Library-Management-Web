@@ -23,7 +23,8 @@ public class ReadersService {
         try {
             return repository.findById(userId);
         } catch (SQLException exception) {
-            throw new LookupException(exception);
+            System.err.println("Lỗi khi tìm kiếm độc giả với ID: " + exception.getMessage());
+            return Optional.empty();
         }
     }
 
@@ -33,61 +34,31 @@ public class ReadersService {
         try {
             repository.insert(reader);
         } catch (SQLException exception) {
-            throw new CreationException(exception);
+            System.err.println("Lỗi khi tạo độc giả với ID: " + exception.getMessage());
         }
     }
 
-    public boolean update(Readers reader) {
+    public void update(Readers reader) {
         UsersService.validateForUpdate(reader);
         validateReader(reader);
         try {
-            return repository.update(reader);
+            repository.update(reader);
         } catch (SQLException exception) {
-            throw new UpdateException(exception);
+            System.err.println("Lỗi khi cập nhật độc giả với ID: " + exception.getMessage());
         }
     }
 
-    public boolean deleteById(String userId) {
+    public void deleteById(String userId) {
         ServiceValidator.requireText(userId, "userId", 30);
         try {
-            return repository.deleteById(userId);
+            repository.deleteById(userId);
         } catch (SQLException exception) {
-            throw new DeletionException(exception);
+            System.err.println("Lỗi khi xóa độc giả với ID: " + exception.getMessage());
         }
     }
 
     private static void validateReader(Readers reader) {
         ServiceValidator.requireText(reader.getCitizenId(), "citizenId", 12);
         ServiceValidator.digitsWithLeadingZero(reader.getCitizenId(), "citizenId", 12);
-    }
-
-    public static class ServiceException extends RuntimeException {
-        private ServiceException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
-    public static final class LookupException extends ServiceException {
-        public LookupException(Throwable cause) {
-            super("Không thể tìm độc giả", cause);
-        }
-    }
-
-    public static final class CreationException extends ServiceException {
-        public CreationException(Throwable cause) {
-            super("Không thể tạo độc giả", cause);
-        }
-    }
-
-    public static final class UpdateException extends ServiceException {
-        public UpdateException(Throwable cause) {
-            super("Không thể cập nhật độc giả", cause);
-        }
-    }
-
-    public static final class DeletionException extends ServiceException {
-        public DeletionException(Throwable cause) {
-            super("Không thể xóa độc giả", cause);
-        }
     }
 }

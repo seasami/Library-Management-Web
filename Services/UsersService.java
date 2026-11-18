@@ -28,7 +28,8 @@ public class UsersService {
         try {
             return repository.findById(userId);
         } catch (SQLException exception) {
-            throw new LookupException(exception);
+            System.err.println("Lỗi khi tìm kiếm người dùng với ID: " + exception.getMessage());
+            return Optional.empty();
         }
     }
 
@@ -36,7 +37,8 @@ public class UsersService {
         try {
             return repository.findAll();
         } catch (SQLException exception) {
-            throw new ListRetrievalException(exception);
+            System.err.println("Lỗi khi tìm kiếm tất cả người dùng: " + exception.getMessage());
+            return List.of();
         }
     }
 
@@ -45,25 +47,26 @@ public class UsersService {
         try {
             repository.insert(user);
         } catch (SQLException exception) {
-            throw new CreationException(exception);
+            System.err.println("Lỗi khi tạo người dùng với ID: " + exception.getMessage());
         }
     }
 
-    public boolean update(Users user) {
+    public void update(Users user) {
         validateForUpdate(user);
         try {
-            return repository.update(user);
+            repository.update(user);
         } catch (SQLException exception) {
-            throw new UpdateException(exception);
+            System.err.println("Lỗi khi cập nhật người dùng với ID: " + exception.getMessage());
         }
     }
 
-    public boolean deleteById(String userId) {
+
+    public void deleteById(String userId) {
         ServiceValidator.requireText(userId, "userId", 30);
         try {
-            return repository.deleteById(userId);
+            repository.deleteById(userId);
         } catch (SQLException exception) {
-            throw new DeletionException(exception);
+            System.err.println("Lỗi khi xóa người dùng với ID: " + exception.getMessage());
         }
     }
 
@@ -98,41 +101,5 @@ public class UsersService {
 
     private static void validateUserStatus(String status) {
         ServiceValidator.oneOf(status, "status", ACTIVE, RESTRICTED, LOCKED);
-    }
-
-    public static class ServiceException extends RuntimeException {
-        private ServiceException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
-    public static final class LookupException extends ServiceException {
-        public LookupException(Throwable cause) {
-            super("Không thể tìm người dùng", cause);
-        }
-    }
-
-    public static final class ListRetrievalException extends ServiceException {
-        public ListRetrievalException(Throwable cause) {
-            super("Không thể lấy danh sách người dùng", cause);
-        }
-    }
-
-    public static final class CreationException extends ServiceException {
-        public CreationException(Throwable cause) {
-            super("Không thể tạo người dùng", cause);
-        }
-    }
-
-    public static final class UpdateException extends ServiceException {
-        public UpdateException(Throwable cause) {
-            super("Không thể cập nhật người dùng", cause);
-        }
-    }
-
-    public static final class DeletionException extends ServiceException {
-        public DeletionException(Throwable cause) {
-            super("Không thể xóa người dùng", cause);
-        }
     }
 }
